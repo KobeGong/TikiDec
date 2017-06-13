@@ -1,0 +1,48 @@
+package com.buddy.tiki.model.constant;
+
+public interface ChannelKeys {
+    public static final String ANDROID = "android";
+    public static final String ANZHI = "anzhi";
+    public static final String APPCHINA = "appchina";
+    public static final String AZAR = "azar";
+    public static final String BAIDU = "baidu";
+    public static final String CHINA_MOBILE = "chinam";
+    public static final String CHUIZI = "chuizi";
+    public static final String COOLPAD = "coolpad";
+    public static final String GDT = "gdt";
+    public static final String GIONEE = "gionee";
+    public static final String GOOGLE_MARKET = "google";
+    public static final String HUAWEI = "huawei";
+    public static final String JIFENG = "jifeng";
+    public static final String JINLI = "jinli";
+    public static final String LENOVO = "lenovo";
+    public static final String LETV = "letv";
+    public static final String LOCAL = "local";
+    public static final String M2345 = "2345";
+    public static final String M91 = "91";
+    public static final String MEIZU = "meizu";
+    public static final String MUMAYI = "mumayi";
+    public static final String NDUO = "nduo";
+    public static final String NPLUS = "nplus";
+    public static final String OPPO = "oppo";
+    public static final String PPZS = "ppzs";
+    public static final String PROMOTION_TEST = "protest";
+    public static final String QIHU360 = "360";
+    public static final String SMARTISAN = "smartisan";
+    public static final String SOGOU = "sogou";
+    public static final String SUMSUNG = "sumsung";
+    public static final String SUNING = "suning";
+    public static final String TAOBAO = "taobao";
+    public static final String TENCENT = "tencent";
+    public static final String TENCENT_SCHOOL01 = "tencentschool01";
+    public static final String TENCENT_SCHOOL02 = "tencentschool02";
+    public static final String TENCENT_SCHOOL03 = "tencentschool03";
+    public static final String TENCENT_SCHOOL04 = "tencentschool04";
+    public static final String TENCENT_SCHOOL05 = "tencentschool05";
+    public static final String UNICOM = "unicom";
+    public static final String VIVO = "vivo";
+    public static final String WANDOUJIA = "wandoujia";
+    public static final String XIAOMI = "xiaomi";
+    public static final String YIJIA = "yijia";
+    public static final String ZTE = "zte";
+}

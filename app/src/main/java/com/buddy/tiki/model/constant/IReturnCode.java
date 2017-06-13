@@ -1,0 +1,40 @@
+package com.buddy.tiki.model.constant;
+
+public interface IReturnCode {
+    public static final int ACTION_FAILED = -91;
+    public static final int BUS_PARAM_INVALID = -98;
+    public static final int ERROR_DATA_FORMAT = -87;
+    public static final int EVENT_EXIST = -99399;
+    public static final int IMAGE_UPLOAD_FAILED = -96000;
+    public static final int INCLUDE_SENSITIVE_WORDS = -86;
+    public static final int INVALID_PHONE = -92;
+    public static final int INVOKE_ERROR = -99;
+    public static final int NETWORK_ERROR = -97;
+    public static final int NOT_ENOUGH_DIAMONDS = -77;
+    public static final int NOT_FOUND_METHOD = -100;
+    public static final int NOT_FOUND_SERVICE = -90;
+    public static final int NO_PERMISSIONS = -88;
+    public static final int OK = 0;
+    public static final int OUT_OF_LIMITED = -79;
+    public static final int SECREQ_VERIFY_NOTPASSED = -89;
+    public static final int SESSION_ERROR = -93;
+    public static final int SESSION_TIMEOUT = -94;
+    public static final int SMS_EXCEED_SEND_FREQUENCY = -99799;
+    public static final int SMS_EXCEED_TOTDAY_SEND_LIMIT = -99800;
+    public static final int SMS_INVALID_AUTHCODE = -99798;
+    public static final int SOCIETY_EXCEED_DAY_SEND_LIMIT = -99699;
+    public static final int SOCIETY_EXCEED_MASS_LIMIT = -99700;
+    public static final int TIMELINE_DESTROIED = -99599;
+    public static final int TOPIC_CANNOT_BROWSE_MORETIMELINE = -99499;
+    public static final int UNKOWN_ERROR = -95;
+    public static final int UNKOWN_SERVICE = -96;
+    public static final int USER_ALREADY_EXISTS = -99992;
+    public static final int USER_ERROR_LAT_LNG = -99987;
+    public static final int USER_INVALID_CONTACTS = -99990;
+    public static final int USER_INVALID_NICK = -99988;
+    public static final int USER_NOT_EXISTS = -99994;
+    public static final int USER_PASSWORD_INCORECT = -99993;
+    public static final int USER_PHONE_INVALID = -99991;
+    public static final int USER_PHONE_UPLOAD_FAILED = -99989;
+    public static final int _ERR_CODE_BASE = -100000;
+}
