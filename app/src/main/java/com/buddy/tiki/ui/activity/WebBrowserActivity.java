@@ -324,7 +324,7 @@ public class WebBrowserActivity extends BaseActivity {
         return C0376R.layout.activity_browser;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m949d();
         m951e();
         m952f();

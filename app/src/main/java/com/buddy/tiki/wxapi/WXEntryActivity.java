@@ -62,7 +62,7 @@ public class WXEntryActivity extends BaseActivity implements IWXAPIEventHandler 
         return C0376R.layout.activity_wx_entry;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m2312c();
         m2314e();
         m2313d();

@@ -66,7 +66,7 @@ import org.webrtc.GlRectDrawer;
 import org.webrtc.MediaCodecVideoEncoder;
 
 public class VideoRecordActivity extends BaseActivity {
-    private static final TikiLog f1525d = TikiLog.getInstance("VideoRecordActivity");
+    private static final TikiLog log = TikiLog.getInstance("VideoRecordActivity");
     private AudioRecordRunnable f1526A;
     private Thread f1527B;
     private boolean f1528C = false;
@@ -82,8 +82,8 @@ public class VideoRecordActivity extends BaseActivity {
     private final long f1536g = (TimeUnit.MILLISECONDS.toNanos(1000) / 24);
     private String f1537h;
     private boolean f1538i = false;
-    private PeerConnectionClient f1539j;
-    private PeerConnectionParameters f1540k;
+    private PeerConnectionClient pcClient;
+    private PeerConnectionParameters peerConnectionParams;
     private EglBase f1541l;
     private boolean f1542m = true;
     @BindView(2131820782)
@@ -229,7 +229,7 @@ public class VideoRecordActivity extends BaseActivity {
         }
 
         public void onCameraSwitchError(String s) {
-            VideoRecordActivity.f1525d.m261d("onCameraSwitchError:" + s);
+            VideoRecordActivity.log.m261d("onCameraSwitchError:" + s);
             ToastUtil.getInstance().show((int) C0376R.string.switch_camera_error);
         }
     }
@@ -260,30 +260,30 @@ public class VideoRecordActivity extends BaseActivity {
             int bufferSize = AudioRecord.getMinBufferSize(44100, 16, 2);
             this.f1518a.f1555z = new AudioRecord(1, 44100, 16, 2, bufferSize);
             ShortBuffer audioData = ShortBuffer.allocate(bufferSize);
-            VideoRecordActivity.f1525d.m261d("audioRecord.startRecording()");
+            VideoRecordActivity.log.m261d("audioRecord.startRecording()");
             this.f1518a.f1555z.startRecording();
             while (this.f1518a.f1533b) {
                 int bufferReadResult = this.f1518a.f1555z.read(audioData.array(), 0, audioData.capacity());
                 if (bufferReadResult > 0) {
                     audioData.limit(bufferReadResult);
-                    VideoRecordActivity.f1525d.m261d("bufferReadResult: " + bufferReadResult);
+                    VideoRecordActivity.log.m261d("bufferReadResult: " + bufferReadResult);
                     if (this.f1518a.f1532a) {
                         try {
-                            VideoRecordActivity.f1525d.m261d("recorder.recordSamples");
+                            VideoRecordActivity.log.m261d("recorder.recordSamples");
                             this.f1518a.f1550u.recordSamples(new Buffer[]{audioData});
                         } catch (Exception e) {
-                            VideoRecordActivity.f1525d.m261d(e.getMessage());
+                            VideoRecordActivity.log.m261d(e.getMessage());
                             e.printStackTrace();
                         }
                     }
                 }
             }
-            VideoRecordActivity.f1525d.m261d("AudioThread Finished, release audioRecord");
+            VideoRecordActivity.log.m261d("AudioThread Finished, release audioRecord");
             if (this.f1518a.f1555z != null) {
                 this.f1518a.f1555z.stop();
                 this.f1518a.f1555z.release();
                 this.f1518a.f1555z = null;
-                VideoRecordActivity.f1525d.m261d("audioRecord released");
+                VideoRecordActivity.log.m261d("audioRecord released");
             }
         }
     }
@@ -322,7 +322,7 @@ public class VideoRecordActivity extends BaseActivity {
                 } else {
                     rotatedData = BitmapUtil.rotateNV21Degree90(this.f1520b, this.f1521c, this.f1522d);
                 }
-                VideoRecordActivity.f1525d.m261d("rotate time:" + (SystemClock.elapsedRealtimeNanos() - start));
+                VideoRecordActivity.log.m261d("rotate time:" + (SystemClock.elapsedRealtimeNanos() - start));
                 if (rotatedData != null) {
                     if (this.f1519a.f1545p) {
                         synchronized (this.f1519a) {
@@ -337,7 +337,7 @@ public class VideoRecordActivity extends BaseActivity {
                     try {
                         long now = SystemClock.elapsedRealtimeNanos();
                         if (now - this.f1519a.f1531F > this.f1519a.f1536g) {
-                            VideoRecordActivity.f1525d.m261d("Writing Frame:now:" + now + " + last:" + this.f1519a.f1531F + " min:" + this.f1519a.f1536g + " start:" + this.f1519a.f1554y);
+                            VideoRecordActivity.log.m261d("Writing Frame:now:" + now + " + last:" + this.f1519a.f1531F + " min:" + this.f1519a.f1536g + " start:" + this.f1519a.f1554y);
                             long t = TimeUnit.NANOSECONDS.toMicros(now - this.f1519a.f1554y);
                             if (t > this.f1519a.f1550u.getTimestamp()) {
                                 this.f1519a.f1550u.setTimestamp(t);
@@ -346,7 +346,7 @@ public class VideoRecordActivity extends BaseActivity {
                             this.f1519a.f1531F = now;
                         }
                     } catch (Exception e) {
-                        VideoRecordActivity.f1525d.m264e(e.getMessage(), e);
+                        VideoRecordActivity.log.m264e(e.getMessage(), e);
                     }
                 }
             }
@@ -362,7 +362,7 @@ public class VideoRecordActivity extends BaseActivity {
         return C0376R.layout.activity_video_record;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m873d();
         m875e();
         m876f();
@@ -370,10 +370,10 @@ public class VideoRecordActivity extends BaseActivity {
         m881h();
         m432e(this.back);
         m432e(this.rotate);
-        m431d(this.recordButton);
-        m431d(this.recordButtonIn);
-        m431d(this.recordTip);
-        m431d(this.maskTip);
+        initBottomView(this.recordButton);
+        initBottomView(this.recordButtonIn);
+        initBottomView(this.recordTip);
+        initBottomView(this.maskTip);
         SystemBarTintManager tintManager = new SystemBarTintManager(this);
         tintManager.setNavigationBarTintEnabled(true);
         tintManager.setNavigationBarTintResource(C0376R.color.black_alpha_normal);
@@ -416,21 +416,21 @@ public class VideoRecordActivity extends BaseActivity {
     }
 
     private void m876f() {
-        if (this.f1540k == null) {
-            this.f1540k = CameraHelper.loadParamsFromPref(this);
+        if (this.peerConnectionParams == null) {
+            this.peerConnectionParams = CameraHelper.loadParamsFromPref(this);
         }
-        if (this.f1539j == null) {
-            this.f1539j = PeerConnectionClient.getInstance();
+        if (this.pcClient == null) {
+            this.pcClient = PeerConnectionClient.getInstance();
         }
-        this.f1539j.setQuality(1);
-        this.f1539j.createPeerConnectionFactory(this, this.f1540k, new SimplePeerConnectionEvents());
-        this.f1539j.setOnPeerConnectionCreated(VideoRecordActivity$$Lambda$1.lambdaFactory$(this));
-        this.f1539j.createPeerConnection(this.f1541l.getEglBaseContext(), this.mRecordPreview, IMRtcClient.getInstance(), null);
+        this.pcClient.setQuality(1);
+        this.pcClient.createPeerConnectionFactory(this, this.peerConnectionParams, new SimplePeerConnectionEvents());
+        this.pcClient.setOnPeerConnectionCreated(VideoRecordActivity$$Lambda$1.lambdaFactory$(this));
+        this.pcClient.createPeerConnectionInternal(this.f1541l.getEglBaseContext(), this.mRecordPreview, IMRtcClient.getInstance(), null);
     }
 
     /* synthetic */ void m896a(PeerConnectionClient peerConnectionClient) {
         m883i();
-        this.f1539j.setOnPeerConnectionCreated(null);
+        this.pcClient.setOnPeerConnectionCreated(null);
     }
 
     private void m878g() {
@@ -515,8 +515,8 @@ public class VideoRecordActivity extends BaseActivity {
     }
 
     /* synthetic */ void m904b(Object aVoid) throws Exception {
-        if (this.f1539j != null) {
-            this.f1539j.switchCamera(new C04442(this));
+        if (this.pcClient != null) {
+            this.pcClient.switchCamera(new C04442(this));
         }
     }
 
@@ -546,7 +546,7 @@ public class VideoRecordActivity extends BaseActivity {
                 this.mRecordPreview.init(this.f1541l.getEglBaseContext(), null);
             }
             if (this.mRecordPreview != null) {
-                this.f1539j.setLocalRender(this.mRecordPreview);
+                this.pcClient.setLocalRender(this.mRecordPreview);
             }
             m876f();
             m881h();
@@ -558,15 +558,15 @@ public class VideoRecordActivity extends BaseActivity {
     }
 
     /* synthetic */ void m903b(Long aLong) throws Exception {
-        if (this.f1539j != null) {
-            f1525d.m261d("onResume: startVideoSource");
-            this.f1539j.startVideoSource();
+        if (this.pcClient != null) {
+            log.m261d("onResume: startVideoSource");
+            this.pcClient.startVideoSource();
         }
     }
 
     protected void onPause() {
-        if (this.f1539j != null) {
-            this.f1539j.stopVideoSource();
+        if (this.pcClient != null) {
+            this.pcClient.stopVideoSource();
         }
         super.onPause();
     }
@@ -581,12 +581,12 @@ public class VideoRecordActivity extends BaseActivity {
 
     private void m881h() {
         try {
-            f1525d.m265i("init recorder");
+            log.m265i("init recorder");
             this.f1553x = SystemClock.elapsedRealtime();
             this.f1543n = FileUtil.newCacheFile("Video") + File.separator + this.f1537h + this.f1553x + ".mp4";
             this.f1544o = FileUtil.newCacheFile("VideoCover") + File.separator + this.f1537h + this.f1553x + ".jpg";
             this.f1549t = new Frame(this.f1551v, this.f1552w, 8, 2);
-            f1525d.m265i("create yuvImage");
+            log.m265i("create yuvImage");
             this.f1550u = new FFmpegFrameRecorder(this.f1543n, this.f1551v, this.f1552w, 1);
             this.f1550u.setFormat("mp4");
             this.f1550u.setSampleRate(44100);
@@ -599,7 +599,7 @@ public class VideoRecordActivity extends BaseActivity {
             } else {
                 this.f1550u.setVideoCodec(28);
             }
-            f1525d.m265i("recorder initialize success");
+            log.m265i("recorder initialize success");
             this.f1526A = new AudioRecordRunnable(this);
             this.f1527B = new Thread(this.f1526A);
             this.f1533b = true;
@@ -610,17 +610,17 @@ public class VideoRecordActivity extends BaseActivity {
             return;
         } catch (Throwable th) {
         }
-        f1525d.m263e("initRecord failed");
+        log.m263e("initRecord failed");
         finish();
     }
 
     private void m883i() {
-        f1525d.m261d("initVideoCapturerCallback");
-        if (this.f1539j != null) {
-            f1525d.m261d("initVideoCapturerCallback 1");
-            CameraVideoCapturer videoCapturer = this.f1539j.getVideoCapturer();
+        log.m261d("initVideoCapturerCallback");
+        if (this.pcClient != null) {
+            log.m261d("initVideoCapturerCallback 1");
+            CameraVideoCapturer videoCapturer = this.pcClient.getVideoCapturer();
             if (videoCapturer != null && (videoCapturer instanceof BiuVideoCapturer2)) {
-                f1525d.m261d("initVideoCapturerCallback 2");
+                log.m261d("initVideoCapturerCallback 2");
                 int width = ((BiuVideoCapturer2) videoCapturer).getPreviewWidth();
                 int height = ((BiuVideoCapturer2) videoCapturer).getPreviewHeight();
                 ((BiuVideoCapturer2) videoCapturer).setPreviewCallback(new C04453(this));
@@ -630,7 +630,7 @@ public class VideoRecordActivity extends BaseActivity {
 
     private void m884j() {
         try {
-            f1525d.m261d("recorder:" + this.f1550u);
+            log.m261d("recorder:" + this.f1550u);
             this.f1546q = this.f1553x;
             m865b(true);
             this.f1550u.start();
@@ -650,7 +650,7 @@ public class VideoRecordActivity extends BaseActivity {
         m860a(false);
         this.recordButton.setProgress(0);
         this.recordButton.setRecording(false);
-        CameraVideoCapturer videoCapturer = this.f1539j.getVideoCapturer();
+        CameraVideoCapturer videoCapturer = pcClient.getVideoCapturer();
         if (videoCapturer != null && (videoCapturer instanceof BiuVideoCapturer2)) {
             ((BiuVideoCapturer2) videoCapturer).setPreviewCallback(null);
         }
@@ -667,7 +667,7 @@ public class VideoRecordActivity extends BaseActivity {
     }
 
     /* synthetic */ void m899a(Throwable throwable) throws Exception {
-        f1525d.m264e(throwable.getMessage(), throwable);
+        log.m264e(throwable.getMessage(), throwable);
         ToastUtil.getInstance().show((Context) this, (int) C0376R.string.record_failed);
     }
 
@@ -676,19 +676,19 @@ public class VideoRecordActivity extends BaseActivity {
         try {
             this.f1527B.join();
         } catch (InterruptedException e) {
-            f1525d.m264e(e.getMessage(), e);
+            log.m264e(e.getMessage(), e);
         }
         this.f1526A = null;
         this.f1527B = null;
         if (this.f1550u != null && this.f1532a) {
             this.f1532a = false;
             this.f1529D.quitSafely();
-            f1525d.m261d("Finishing recording, calling stop and release on recorder");
+            log.m261d("Finishing recording, calling stop and release on recorder");
             try {
                 this.f1550u.stop();
                 this.f1550u.release();
             } catch (Exception e2) {
-                f1525d.m264e(e2.getMessage(), e2);
+                log.m264e(e2.getMessage(), e2);
             }
             this.f1550u = null;
         }
@@ -730,7 +730,7 @@ public class VideoRecordActivity extends BaseActivity {
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == 8737) {
-            f1525d.m261d("onActivityResult:RC_CALL_VIDEO_RECORD_RESULT");
+            log.m261d("onActivityResult:RC_CALL_VIDEO_RECORD_RESULT");
             this.f1548s = true;
             return;
         }

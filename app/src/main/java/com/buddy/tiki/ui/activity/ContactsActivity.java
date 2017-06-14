@@ -17,7 +17,7 @@ public class ContactsActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         this.f1402b = new ContactsFragment();
         this.f1402b.setArguments(getArguments());
         addFragment(this.f1402b);

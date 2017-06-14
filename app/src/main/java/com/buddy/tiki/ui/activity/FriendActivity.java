@@ -16,7 +16,7 @@ public class FriendActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         Rtc.initialize(getApplication());
         getDataLayer().getFollowManager().syncFriendsQuery(PreferenceUtil.getSyncTimepoint()).subscribe(FriendActivity$$Lambda$1.lambdaFactory$(), FriendActivity$$Lambda$2.lambdaFactory$());
         addFragment(new FriendFragment());

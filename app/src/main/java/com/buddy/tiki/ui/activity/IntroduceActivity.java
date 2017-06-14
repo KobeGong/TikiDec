@@ -19,7 +19,7 @@ public class IntroduceActivity extends BaseActivity {
         return C0376R.layout.activity_introduce;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m723c();
     }
 

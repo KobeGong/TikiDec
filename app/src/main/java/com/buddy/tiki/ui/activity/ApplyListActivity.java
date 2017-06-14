@@ -10,7 +10,7 @@ public class ApplyListActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         ApplyListFragment applyListFragment = new ApplyListFragment();
         applyListFragment.setArguments(getArguments());
         addFragment(applyListFragment);

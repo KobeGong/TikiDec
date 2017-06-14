@@ -138,7 +138,7 @@ public class VideoRecordResultActivity extends BaseActivity {
         return C0376R.layout.activity_video_record_result;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m914c();
         m915d();
         m916e();
@@ -151,9 +151,9 @@ public class VideoRecordResultActivity extends BaseActivity {
         m432e(this.setDiamonds);
         m432e(this.showPayLayout);
         m432e(this.close);
-        m431d(this.notVipFriendLayout);
-        m431d(this.vipFriendLayout);
-        m431d(this.sendVideoRecord);
+        initBottomView(this.notVipFriendLayout);
+        initBottomView(this.vipFriendLayout);
+        initBottomView(this.sendVideoRecord);
         SystemBarTintManager tintManager = new SystemBarTintManager(this);
         tintManager.setNavigationBarTintEnabled(true);
         tintManager.setNavigationBarTintResource(C0376R.color.black_alpha_normal);

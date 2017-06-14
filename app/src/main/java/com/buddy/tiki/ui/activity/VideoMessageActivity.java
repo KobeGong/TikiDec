@@ -203,7 +203,7 @@ public class VideoMessageActivity extends BaseActivity {
         }
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m830d();
         m832e();
         m833f();
@@ -264,7 +264,7 @@ public class VideoMessageActivity extends BaseActivity {
             m822a(true);
             m829c(false);
         }
-        m431d(this.mReply);
+        initBottomView(this.mReply);
     }
 
     private void m833f() {

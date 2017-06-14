@@ -154,6 +154,9 @@ import tourguide.tourguide.TourGuide;
 import tourguide.tourguide.TourGuide.Technique;
 import tv.danmaku.ijk.media.player.IMediaPlayer;
 
+import static butterknife.ButterKnife.Finder.VIEW;
+import static com.buddy.tiki.C0376R.styleable.Alerter;
+
 public class CallActivity extends BaseActivity implements FacechatIMEvents, Listener, OnCallEvents, FriendFragmentEvent, YouFragmentEvent {
     private static final TikiLog f1249a = TikiLog.getInstance("CallActivity");
     private volatile boolean f1250A;
@@ -174,16 +177,16 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     private DisposableObserver<Long> f1265P;
     private Disposable f1266Q;
     private volatile boolean f1267R;
-    private boolean f1268b;
+    private boolean isConnected;
     private boolean f1269d;
     private boolean f1270e;
-    private boolean f1271f = true;
+    private boolean isReverse = true;
     private boolean f1272g = true;
-    private MatchMessage f1273h;
+    private MatchMessage matchMessage;
     private DisposableObserver<Long> f1274i;
     private DisposableObserver<Long> f1275j;
     private int f1276k;
-    private CallMainFragment f1277l;
+    private CallMainFragment callMainFragment;
     private FriendFragment f1278m;
     @BindView(2131820747)
     SeekBar mBlurRadiusSeekBar;
@@ -257,13 +260,13 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     View mUnblockButton;
     @BindView(2131820725)
     View mUpGradientMask;
-    private YouFragment f1279n;
-    private AtomicBoolean f1280o;
-    private LinkedList<Gift> f1281p;
-    private VersionHelper f1282q;
+    private YouFragment youFragment;
+    private AtomicBoolean isMatchStarted;
+    private LinkedList<Gift> gifts;
+    private VersionHelper versionHelper;
     private volatile boolean f1283r;
     private int f1284s;
-    private ConfigInfo f1285t;
+    private ConfigInfo configInfo;
     private User f1286u;
     private boolean f1287v;
     private String f1288w;
@@ -328,11 +331,6 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     class C04258 extends DisposableObserver<Long> {
-        final /* synthetic */ CallActivity f1244a;
-
-        C04258(CallActivity this$0) {
-            this.f1244a = this$0;
-        }
 
         public void onComplete() {
         }
@@ -342,8 +340,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
         public void onNext(Long aLong) {
             CallActivity.f1249a.m263e("onNext connected");
-            if (this.f1244a.f1273h != null && !TextUtils.isEmpty(this.f1244a.f1273h.getRoomId()) && this.f1244a.f1268b && this.f1244a.mLocalRender != null) {
-                this.f1244a.mLocalRender.getRender().capture(CallActivity$8$$Lambda$1.lambdaFactory$(this, this.f1244a.f1273h.getRoomId()));
+            if (matchMessage != null && !TextUtils.isEmpty(matchMessage.getRoomId()) && isConnected && mLocalRender != null) {
+                mLocalRender.getRender().capture(CallActivity$8$$Lambda$1.lambdaFactory$(this, matchMessage.getRoomId()));
             }
         }
 
@@ -352,7 +350,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
 
         /* synthetic */ ObservableSource m473a(byte[] bytes) throws Exception {
-            return this.f1244a.getDataLayer().getTikiResManager().uploadTempPic(bytes);
+            return getDataLayer().getTikiResManager().uploadTempPic(bytes);
         }
 
         /* synthetic */ CompletableSource m472a(String roomId, String url) throws Exception {
@@ -382,7 +380,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 CallActivity.f1249a.m261d("mMatchCheckSubscriber:disconnect");
                 this.f1245a.m489L();
             }
-            this.f1245a.m586w();
+            this.f1245a.requestRoom();
         }
     }
 
@@ -475,7 +473,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         super.onNewIntent(intent);
         this.f1267R = true;
         if (intent.getBooleanExtra("PARAM_KEY_RUSH_MODE", false)) {
-            if (this.f1268b) {
+            if (this.isConnected) {
                 m490M();
             }
             m549f(false);
@@ -483,18 +481,18 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         this.f1267R = false;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         if (savedInstanceState == null) {
-            m555h();
-            m431d(this.mBottomNavigationView);
+            getIntentExtras();
+            initBottomView(this.mBottomNavigationView);
             DialogHelper.INSTANCE.resetIndex();
-            m575o();
+            downWebPResource();
             m581r();
             m566l();
             m570m();
-            m583t();
-            m584u();
-            m585v();
+            addCallMainFragment();
+            addFriendFragment();
+            addYouFragment();
             m577p();
             m479B();
             m484G();
@@ -510,7 +508,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
     }
 
-    private void m555h() {
+    private void getIntentExtras() {
         Bundle args = null;
         Intent intent = getIntent();
         if (intent != null) {
@@ -595,7 +593,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ void m616b(ConfigInfo configInfo) throws Exception {
-        this.f1285t = configInfo;
+        this.configInfo = configInfo;
     }
 
     /* synthetic */ void m599a(ConfigInfo configInfo) throws Exception {
@@ -610,12 +608,12 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             if (matchLimits == null || !matchLimits.isOpen()) {
                 m512a(configInfo.getNotice(), CallActivity$$Lambda$6.lambdaFactory$(this));
             } else {
-                if (this.f1277l != null && this.f1277l.isAdded()) {
-                    this.f1277l.showBlockContent(matchLimits, 0);
+                if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+                    this.callMainFragment.showBlockContent(matchLimits, 0);
                 }
                 this.mBottomNavigationView.setBanned(true);
-                this.f1268b = false;
-                this.f1280o.set(false);
+                this.isConnected = false;
+                this.isMatchStarted.set(false);
                 this.mUnblockButton.setVisibility(0);
                 m485H();
                 this.mUnblockButton.setOnClickListener(CallActivity$$Lambda$7.lambdaFactory$(this));
@@ -626,8 +624,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     /* synthetic */ void m628d(DialogInterface dialog) {
         this.mBottomNavigationView.setBanned(false);
         this.mUnblockButton.setVisibility(8);
-        if (this.f1277l != null && this.f1277l.isAdded()) {
-            this.f1277l.showBlockContent(null, 8);
+        if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+            this.callMainFragment.showBlockContent(null, 8);
         }
     }
 
@@ -637,8 +635,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             this.f1284s = 0;
             this.mBottomNavigationView.setBanned(false);
             this.mUnblockButton.setVisibility(8);
-            if (this.f1277l != null && this.f1277l.isAdded()) {
-                this.f1277l.showBlockContent(null, 8);
+            if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+                this.callMainFragment.showBlockContent(null, 8);
             }
         }
     }
@@ -651,8 +649,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             DialogHelper.INSTANCE.showUpdateDialog(this, versionInfo, CallActivity$$Lambda$8.lambdaFactory$(this, versionInfo));
             return;
         }
-        this.f1282q = new VersionHelper(this);
-        this.f1282q.showDownloadDialog(versionInfo);
+        this.versionHelper = new VersionHelper(this);
+        this.versionHelper.showDownloadDialog(versionInfo);
     }
 
     /* synthetic */ void m601a(VersionInfo versionInfo, View v) {
@@ -677,7 +675,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
     }
 
-    private void m575o() {
+    private void downWebPResource() {
         DownloadHelper.getInstance().downloadWebPResource();
     }
 
@@ -694,19 +692,19 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
         this.f1251B = true;
         m579q();
-        if (this.f1277l != null && this.f1277l.isAdded()) {
-            this.f1277l.showBannedContent(user.getBlockText(), user.getBlockUrl());
+        if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+            this.callMainFragment.showBannedContent(user.getBlockText(), user.getBlockUrl());
         }
     }
 
     private synchronized void m579q() {
         if (!isFinishing()) {
-            this.f1268b = false;
-            this.f1280o.set(false);
+            this.isConnected = false;
+            this.isMatchStarted.set(false);
             this.mUnblockButton.setVisibility(8);
             this.mBottomNavigationView.setBanned(true);
-            if (this.f1277l != null && this.f1277l.isAdded()) {
-                this.f1277l.showBlockContent(null, 8);
+            if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+                this.callMainFragment.showBlockContent(null, 8);
             }
             m485H();
         }
@@ -716,48 +714,48 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         this.f1276k = DisplayUtil.getRawWidth(this);
         this.f1289x = new RxPermissions(this);
         this.f1270e = true;
-        this.f1280o = new AtomicBoolean(false);
+        this.isMatchStarted = new AtomicBoolean(false);
         this.f1250A = false;
         this.f1288w = BuildConfig.VERSION_NAME;
         this.f1287v = false;
         this.f1283r = false;
-        this.f1268b = false;
+        this.isConnected = false;
         this.f1269d = false;
-        this.f1273h = null;
-        this.f1281p = new LinkedList();
+        this.matchMessage = null;
+        this.gifts = new LinkedList();
         this.mLocalRender.getRender().setZOrderMediaOverlay(false);
         this.mRemoteRender.getRender().setZOrderMediaOverlay(false);
         Foreground.get().addListener(this);
     }
 
-    private boolean m582s() {
-        return this.f1280o.get() || (this.f1273h != null && this.f1273h.isClockMode());
+    private boolean isMatchStarted() {
+        return this.isMatchStarted.get() || (this.matchMessage != null && this.matchMessage.isClockMode());
     }
 
-    private void m583t() {
-        this.f1277l = new CallMainFragment();
+    private void addCallMainFragment() {
+        this.callMainFragment = new CallMainFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add((int) C0376R.id.controller_fragment_container, this.f1277l);
+        ft.add((int) C0376R.id.controller_fragment_container, this.callMainFragment);
         ft.commit();
     }
 
-    private void m584u() {
+    private void addFriendFragment() {
         this.f1278m = new FriendFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
         ft.add((int) C0376R.id.friend_fragment_container, this.f1278m);
         ft.commitAllowingStateLoss();
     }
 
-    private void m585v() {
-        this.f1279n = new YouFragment();
+    private void addYouFragment() {
+        this.youFragment = new YouFragment();
         FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
-        ft.add((int) C0376R.id.you_fragment_container, this.f1279n);
+        ft.add((int) C0376R.id.you_fragment_container, this.youFragment);
         ft.commitAllowingStateLoss();
     }
 
-    private void m586w() {
-        f1249a.m269w("try to request room: autoMatch=" + m582s() + " background=" + this.f1283r + " activityRunning=" + this.f1270e);
-        if (m582s() && !this.f1283r && !this.f1267R) {
+    private void requestRoom() {
+        f1249a.m269w("try to request room: autoMatch=" + isMatchStarted() + " background=" + this.f1283r + " activityRunning=" + this.f1270e);
+        if (isMatchStarted() && !this.f1283r && !this.f1267R) {
             if (this.f1250A) {
                 m589z();
                 Observable.timer(AbstractTrafficShapingHandler.DEFAULT_MAX_TIME, TimeUnit.MILLISECONDS).subscribe(this.f1274i);
@@ -791,10 +789,10 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     /* synthetic */ void m623c(DialogInterface dialog, int which) {
         m589z();
         Observable.timer(AbstractTrafficShapingHandler.DEFAULT_MAX_TIME, TimeUnit.MILLISECONDS).subscribe(this.f1274i);
-        if (this.f1285t == null) {
+        if (this.configInfo == null) {
             ToastUtil.getInstance().show((Context) this, (int) C0376R.string.fetch_data_failed);
         } else {
-            WebBrowserActivity.launchWeb(this, this.f1285t.getH5DiamondsUrl());
+            WebBrowserActivity.launchWeb(this, this.configInfo.getH5DiamondsUrl());
         }
     }
 
@@ -840,16 +838,16 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m478A() {
-        if (this.f1277l != null && this.f1277l.isAdded() && !isFinishing()) {
+        if (this.callMainFragment != null && this.callMainFragment.isAdded() && !isFinishing()) {
             User user;
-            f1249a.m261d("updateControlFragment:mMatchedParameter:" + this.f1273h);
-            CallMainFragment callMainFragment = this.f1277l;
-            if (this.f1273h == null) {
+            f1249a.m261d("updateControlFragment:mMatchedParameter:" + this.matchMessage);
+            CallMainFragment callMainFragment = this.callMainFragment;
+            if (this.matchMessage == null) {
                 user = null;
             } else {
-                user = this.f1273h.getMatchUser();
+                user = this.matchMessage.getMatchUser();
             }
-            callMainFragment.updateStatusEvent(new UpdateStatusEvent(user, this.f1280o.get()));
+            callMainFragment.updateStatusEvent(new UpdateStatusEvent(user, this.isMatchStarted.get()));
         }
     }
 
@@ -880,7 +878,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 return;
             case swscale.SWS_CS_FCC /*4*/:
                 this.mMatchLayout.reset();
-                this.f1280o.set(false);
+                this.isMatchStarted.set(false);
                 stopMatch();
                 return;
             case swscale.SWS_CS_SMPTE170M /*5*/:
@@ -898,7 +896,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     public void stopMatch() {
         this.f1263N = true;
         getDataLayer().getChatManager().unMatchAction().subscribeOn(Schedulers.io()).subscribe(CallActivity$$Lambda$17.lambdaFactory$(), CallActivity$$Lambda$18.lambdaFactory$());
-        this.f1280o.set(false);
+        this.isMatchStarted.set(false);
         m490M();
         this.mMatchLayout.enableHorizontalDrag(true);
         this.mMatchLayout.enableVerticalDrag(false);
@@ -908,9 +906,9 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public void startMatch(boolean request) {
-        this.f1280o.set(true);
+        this.isMatchStarted.set(true);
         if (request) {
-            m586w();
+            requestRoom();
         }
         m485H();
         m478A();
@@ -923,11 +921,11 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public boolean getMatchState() {
-        return this.f1280o.get();
+        return this.isMatchStarted.get();
     }
 
     private void m480C() {
-        this.f1271f = !this.f1271f;
+        this.isReverse = !this.isReverse;
         m485H();
     }
 
@@ -959,8 +957,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         this.mLocalRender.getRender().setDrawRgb(false);
         this.mRemoteRender.getRender().setMirror(false);
         this.mRemoteRender.getRender().setDrawRgb(false);
-        m547f(this.mRemoteRender);
-        m552g(this.mLocalRender);
+        addLocalView(this.mRemoteRender);
+        addRemoteView(this.mLocalRender);
         this.mMatchLayout.init(this.mMatchView1, this.mMatchView2, this.mMatchView3, this.mHorizontalPanel, this.mMoveDetectView, this.mLocalPreviewLayout, this.mMatchFilterLayout, this.mUpGradientMask, this.mFaceDetectCover);
         this.mMatchLayout.enableHorizontalDrag(true);
         this.mMatchLayout.enableVerticalDrag(false);
@@ -974,8 +972,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             public void onFlingDown() {
                 CallActivity.f1249a.m261d("onFlingDown");
                 this.f1224a.m489L();
-                if (this.f1224a.f1277l != null && this.f1224a.f1277l.isAdded()) {
-                    this.f1224a.f1277l.resetFriendButton();
+                if (this.f1224a.callMainFragment != null && this.f1224a.callMainFragment.isAdded()) {
+                    this.f1224a.callMainFragment.resetFriendButton();
                 }
             }
 
@@ -1018,12 +1016,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     private void m525b(boolean afterGranted) {
         if (ContextCompat.checkSelfPermission(this, "android.permission.CAMERA") == 0 && ContextCompat.checkSelfPermission(this, "android.permission.RECORD_AUDIO") == 0) {
-            Rtc.openCamera(this, this.mLocalRender.getRender(), this.mRemoteRender.getRender(), new OnConstructCapturer(this) {
-                final /* synthetic */ CallActivity f1225a;
-
-                {
-                    this.f1225a = this$0;
-                }
+            Rtc.openCamera(this, this.mLocalRender.getRender(), this.mRemoteRender.getRender(), new OnConstructCapturer() {
 
                 public FacechatCapturer newInstance(String cameraName, CameraEventsHandler eventsHandler, boolean captureToTexture) {
                     FacechatCapturer result = BiuVideoCapturer2.create(cameraName, eventsHandler, captureToTexture);
@@ -1039,7 +1032,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
     }
 
-    private void m547f(View view) {
+    private void addLocalView(View view) {
         if (view != null) {
             ViewGroup parent = (ViewGroup) view.getParent();
             if (parent != null) {
@@ -1049,7 +1042,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         }
     }
 
-    private void m552g(View view) {
+    private void addRemoteView(View view) {
         if (view != null) {
             ViewGroup parent = (ViewGroup) view.getParent();
             if (parent != null) {
@@ -1069,14 +1062,14 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     private void m485H() {
         if (!isFinishing()) {
-            if (m582s() && this.f1268b) {
-                this.mMatchFilter.setVisibility(8);
-                m554g(true);
-                this.mSimpleMatchingView.setVisibility(8);
-                if (this.f1271f) {
+            if (isMatchStarted() && this.isConnected) {
+                this.mMatchFilter.setVisibility(View.GONE);
+                changeMaskVisibility(true);
+                this.mSimpleMatchingView.setVisibility(View.GONE);
+                if (this.isReverse) {
                     if (this.f1253D != 3) {
-                        m547f(this.mLocalRender);
-                        m552g(this.mRemoteRender);
+                        addLocalView(this.mLocalRender);
+                        addRemoteView(this.mRemoteRender);
                         m532c(true);
                         this.mMatchLayout.reset();
                         this.f1253D = 3;
@@ -1084,8 +1077,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                     }
                     return;
                 } else if (this.f1253D != 4) {
-                    m547f(this.mRemoteRender);
-                    m552g(this.mLocalRender);
+                    addLocalView(this.mRemoteRender);
+                    addRemoteView(this.mLocalRender);
                     m532c(true);
                     this.mMatchLayout.reset();
                     this.f1253D = 4;
@@ -1095,18 +1088,18 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 }
             }
             this.mMatchFilter.setVisibility(0);
-            if (m582s()) {
+            if (isMatchStarted()) {
                 this.mMatchFilter.enableClick(false);
-                m554g(false);
+                changeMaskVisibility(false);
                 if (TextUtils.isEmpty(this.f1291z) || "0".equals(this.f1291z)) {
                     this.mMatchFilter.setVisibility(8);
                 } else {
                     this.mMatchFilter.setBackgroundColor(0);
                 }
-                if (this.f1271f) {
+                if (this.isReverse) {
                     if (this.f1253D != 1) {
-                        m547f(this.mLocalRender);
-                        m552g(this.mRemoteRender);
+                        addLocalView(this.mLocalRender);
+                        addRemoteView(this.mRemoteRender);
                         m532c(true);
                         if (this.f1263N) {
                             this.mMatchLayout.initMatchWithAnime();
@@ -1118,8 +1111,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                         this.f1253D = 1;
                     }
                 } else if (this.f1253D != 2) {
-                    m552g(this.mLocalRender);
-                    m547f(this.mRemoteRender);
+                    addRemoteView(this.mLocalRender);
+                    addLocalView(this.mRemoteRender);
                     m532c(true);
                     this.mMatchLayout.reset();
                     this.mSimpleMatchingView.setVisibility(0);
@@ -1128,9 +1121,9 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             } else if (this.f1253D != 0) {
                 this.mMatchFilter.enableClick(true);
                 this.mMatchFilter.setBackgroundResource(C0376R.drawable.bg_match_filter);
-                m554g(true);
-                m552g(this.mLocalRender);
-                m547f(this.mRemoteRender);
+                changeMaskVisibility(true);
+                addRemoteView(this.mLocalRender);
+                addLocalView(this.mRemoteRender);
                 m532c(false);
                 this.mMatchLayout.reset();
                 this.mSimpleMatchingView.setVisibility(8);
@@ -1144,7 +1137,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         f1249a.m263e("callConnected");
         m478A();
         m485H();
-        if (this.f1273h == null || ((this.f1273h.getMatchUser() == null || !BitsUtil.isFriend(this.f1273h.getMatchUser().getRelation())) && !this.f1273h.isClockMode())) {
+        if (this.matchMessage == null || ((this.matchMessage.getMatchUser() == null || !BitsUtil.isFriend(this.matchMessage.getMatchUser().getRelation())) && !this.matchMessage.isClockMode())) {
             m482E();
             m535d(60);
             this.mLocalCountdownBorder.setCountDownListener(new SimpleCountDownListener(this) {
@@ -1159,7 +1152,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 }
 
                 public void onTimeLeft(int second) {
-                    if (second == 20 && this.f1226a.f1277l != null && this.f1226a.f1277l.isAdded() && this.f1226a.mBottomNavigationView != null && this.f1226a.f1255F) {
+                    if (second == 20 && this.f1226a.callMainFragment != null && this.f1226a.callMainFragment.isAdded() && this.f1226a.mBottomNavigationView != null && this.f1226a.f1255F) {
                         this.f1226a.f1255F = false;
                         this.f1226a.mBottomNavigationView.setSendGiftTipVisibility(true);
                     }
@@ -1168,7 +1161,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         } else {
             m481D();
         }
-        if (this.f1273h == null || !this.f1273h.isClockMode()) {
+        if (this.matchMessage == null || !this.matchMessage.isClockMode()) {
             if (!(this.f1265P == null || this.f1265P.isDisposed())) {
                 this.f1265P.dispose();
             }
@@ -1178,7 +1171,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             }
             return;
         }
-        if (this.f1273h.isUber()) {
+        if (this.matchMessage.isUber()) {
             m487J();
         } else if (!(this.f1266Q == null || this.f1266Q.isDisposed())) {
             this.f1266Q.dispose();
@@ -1198,7 +1191,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ boolean m633f(User user) throws Exception {
-        return this.f1273h != null && this.f1273h.isClockMode() && this.f1273h.isUber();
+        return this.matchMessage != null && this.matchMessage.isClockMode() && this.matchMessage.isUber();
     }
 
     static /* synthetic */ boolean m544e(User user) throws Exception {
@@ -1227,8 +1220,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             }
 
             public void onNext(Long aLong) {
-                if (aLong.longValue() % 60 == 0 && this.f1227a.f1273h != null && this.f1227a.f1273h.isClockMode() && !this.f1227a.f1273h.isUber()) {
-                    this.f1227a.f1264O = ((aLong.longValue() / 60) + 1) * this.f1227a.f1273h.getClockPrice();
+                if (aLong.longValue() % 60 == 0 && this.f1227a.matchMessage != null && this.f1227a.matchMessage.isClockMode() && !this.f1227a.matchMessage.isUber()) {
+                    this.f1227a.f1264O = ((aLong.longValue() / 60) + 1) * this.f1227a.matchMessage.getClockPrice();
                     this.f1227a.mTMoneyIncrement.setText(this.f1227a.getString(C0376R.string.increment_t_coin_format, new Object[]{Long.valueOf(this.f1227a.f1264O)}));
                 }
                 this.f1227a.mLocalCountdownBorder.setTime(String.format(Locale.getDefault(), "%02d:%02d", new Object[]{Long.valueOf(aLong.longValue() / 60), Long.valueOf(aLong.longValue() % 60)}));
@@ -1259,11 +1252,11 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m491N() {
-        f1249a.m261d("updateLeaveView:" + this.f1273h);
+        f1249a.m261d("updateLeaveView:" + this.matchMessage);
         Alerter.clearCurrent(this);
         this.mTMoneyIncrement.setText(BuildConfig.VERSION_NAME);
-        if (this.f1281p != null) {
-            this.f1281p.clear();
+        if (this.gifts != null) {
+            this.gifts.clear();
         }
         if (this.mGiftShow != null) {
             this.mGiftShow.setVisibility(4);
@@ -1279,18 +1272,18 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m538d(boolean leave) {
-        if (this.f1273h != null) {
-            f1249a.m263e("matchmessaage " + this.f1273h.toString());
+        if (this.matchMessage != null) {
+            f1249a.m263e("matchmessaage " + this.matchMessage.toString());
         }
-        if (this.f1273h == null) {
+        if (this.matchMessage == null) {
             return;
         }
-        if (!leave || this.f1273h.isConnected()) {
-            if (leave && this.f1273h.isConnected()) {
-                this.f1273h.setConnected(false);
+        if (!leave || this.matchMessage.isConnected()) {
+            if (leave && this.matchMessage.isConnected()) {
+                this.matchMessage.setConnected(false);
             }
-            if (!TextUtils.isEmpty(this.f1273h.getSession()) && this.f1273h.getMatchUser() != null) {
-                getDataLayer().getChatManager().reportChatSession(this.f1273h.getSession(), this.f1273h.getMatchUser().getUid(), this.f1273h.getRoomId(), 2, leave, (int) this.f1264O).subscribeOn(Schedulers.io()).subscribe(CallActivity$$Lambda$30.lambdaFactory$(), CallActivity$$Lambda$31.lambdaFactory$());
+            if (!TextUtils.isEmpty(this.matchMessage.getSession()) && this.matchMessage.getMatchUser() != null) {
+                getDataLayer().getChatManager().reportChatSession(this.matchMessage.getSession(), this.matchMessage.getMatchUser().getUid(), this.matchMessage.getRoomId(), 2, leave, (int) this.f1264O).subscribeOn(Schedulers.io()).subscribe(CallActivity$$Lambda$30.lambdaFactory$(), CallActivity$$Lambda$31.lambdaFactory$());
                 this.f1264O = 0;
             }
         }
@@ -1305,12 +1298,12 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     private void m492O() {
         f1249a.m261d("leave room mMatched=" + this.f1269d);
         if (this.f1269d) {
-            f1249a.m261d("leave room result is " + Rtc.leaveRoom(this.f1273h == null ? BuildConfig.VERSION_NAME : this.f1273h.getRoomId(), BuildConfig.VERSION_NAME));
+            f1249a.m261d("leave room result is " + Rtc.leaveRoom(this.matchMessage == null ? BuildConfig.VERSION_NAME : this.matchMessage.getRoomId(), BuildConfig.VERSION_NAME));
         }
         m538d(true);
-        this.f1273h = null;
-        this.f1268b = false;
-        this.f1271f = true;
+        this.matchMessage = null;
+        this.isConnected = false;
+        this.isReverse = true;
         this.f1269d = false;
         if (!(this.f1275j == null || this.f1275j.isDisposed())) {
             this.f1275j.dispose();
@@ -1328,10 +1321,10 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m493P() {
-        if (this.f1285t == null || TextUtils.isEmpty(this.f1285t.getMatchOptionsUrl())) {
+        if (this.configInfo == null || TextUtils.isEmpty(this.configInfo.getMatchOptionsUrl())) {
             ToastUtil.getInstance().show((Context) this, (int) C0376R.string.fetch_data_failed);
         } else {
-            WebBrowserActivity.launchWebForResult(this, this.f1285t.getMatchOptionsUrl(), 31);
+            WebBrowserActivity.launchWebForResult(this, this.configInfo.getMatchOptionsUrl(), 31);
         }
     }
 
@@ -1340,9 +1333,9 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ void m602a(MatchMessage matchMessage) {
-        if (this.f1273h == null || !this.f1273h.isClockMode()) {
+        if (this.matchMessage == null || !this.matchMessage.isClockMode()) {
             boolean z;
-            this.f1273h = matchMessage;
+            this.matchMessage = matchMessage;
             this.f1258I = false;
             this.f1259J = false;
             if (matchMessage.isBlured()) {
@@ -1352,8 +1345,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             }
             this.f1260K = z;
             FUUtil.getInstance().resetFaceDetecting();
-            if (m582s()) {
-                if (this.f1280o.compareAndSet(false, true)) {
+            if (isMatchStarted()) {
+                if (this.isMatchStarted.compareAndSet(false, true)) {
                     this.mBottomNavigationView.translateView(0.0f, 0.0f);
                     startMatch(false);
                     this.mBottomNavigationView.startMatch(false);
@@ -1390,8 +1383,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ void m619b(String applyId, String applyUid) {
-        if (this.f1277l.isAdded()) {
-            this.f1277l.receiveFriendRequest(applyId, applyUid);
+        if (this.callMainFragment.isAdded()) {
+            this.callMainFragment.receiveFriendRequest(applyId, applyUid);
         }
     }
 
@@ -1411,8 +1404,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ ObservableSource m594a(String roomId, String payload) throws Exception {
-        f1249a.m261d("onRoomMessage:roomId:" + roomId + " payload:" + payload + " matchParameter:" + this.f1273h + " mp.roomId:" + (this.f1273h != null ? this.f1273h.getRoomId() : BuildConfig.VERSION_NAME));
-        if (this.f1273h == null || !roomId.equalsIgnoreCase(this.f1273h.getRoomId())) {
+        f1249a.m261d("onRoomMessage:roomId:" + roomId + " payload:" + payload + " matchParameter:" + this.matchMessage + " mp.roomId:" + (this.matchMessage != null ? this.matchMessage.getRoomId() : BuildConfig.VERSION_NAME));
+        if (this.matchMessage == null || !roomId.equalsIgnoreCase(this.matchMessage.getRoomId())) {
             return Observable.empty();
         }
         try {
@@ -1453,8 +1446,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public void onRoomSession(String roomId, String session) {
-        if (this.f1273h != null) {
-            this.f1273h.setSession(session);
+        if (this.matchMessage != null) {
+            this.matchMessage.setSession(session);
         }
     }
 
@@ -1471,14 +1464,14 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     /* synthetic */ void m598a(View v) {
-        if (this.f1285t != null && !TextUtils.isEmpty(this.f1285t.getH5DiamondsUrl())) {
+        if (this.configInfo != null && !TextUtils.isEmpty(this.configInfo.getH5DiamondsUrl())) {
             Alerter.clearCurrent(this);
-            WebBrowserActivity.launchWeb(this, this.f1285t.getH5DiamondsUrl());
+            WebBrowserActivity.launchWeb(this, this.configInfo.getH5DiamondsUrl());
         }
     }
 
     /* synthetic */ boolean m626c(User user) throws Exception {
-        return this.f1273h != null && this.f1273h.isClockMode() && this.f1273h.isUber();
+        return this.matchMessage != null && this.matchMessage.isClockMode() && this.matchMessage.isUber();
     }
 
     static /* synthetic */ boolean m526b(User user) throws Exception {
@@ -1490,16 +1483,16 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public void onStateChange(int state, @Nullable String roomId) {
-        if (TextUtils.isEmpty(roomId) || this.f1273h == null || roomId.equalsIgnoreCase(this.f1273h.getRoomId())) {
+        if (TextUtils.isEmpty(roomId) || this.matchMessage == null || roomId.equalsIgnoreCase(this.matchMessage.getRoomId())) {
             runOnUiThread(CallActivity$$Lambda$43.lambdaFactory$(this, state));
         }
     }
 
     /* synthetic */ void m612b(int state) {
-        m546f(state);
+        setState(state);
     }
 
-    private void m546f(int state) {
+    private void setState(int state) {
         switch (state) {
             case avutil.AV_SAMPLE_FMT_S64P /*11*/:
                 f1249a.m261d("FacechatLifeState.CONNECTING");
@@ -1517,17 +1510,17 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 this.f1255F = true;
                 m538d(false);
                 try {
-                    this.f1273h.setConnected(true);
+                    this.matchMessage.setConnected(true);
                 } catch (NullPointerException e) {
                 }
                 if (!(this.f1275j == null || this.f1275j.isDisposed())) {
                     this.f1275j.dispose();
                 }
-                if (this.f1287v || !(this.f1286u == null || !this.f1286u.isNeedReport() || this.f1285t == null)) {
+                if (this.f1287v || !(this.f1286u == null || !this.f1286u.isNeedReport() || this.configInfo == null)) {
                     m588y();
-                    Observable.interval((long) this.f1285t.getPornFirst(), (long) this.f1285t.getPornInterval(), TimeUnit.SECONDS).compose(bindToLifecycle()).subscribe(this.f1275j);
+                    Observable.interval((long) this.configInfo.getPornFirst(), (long) this.configInfo.getPornInterval(), TimeUnit.SECONDS).compose(bindToLifecycle()).subscribe(this.f1275j);
                 }
-                this.f1268b = true;
+                this.isConnected = true;
                 m496S();
                 m486I();
                 return;
@@ -1537,10 +1530,10 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
                 if (!(this.f1275j == null || this.f1275j.isDisposed())) {
                     this.f1275j.dispose();
                 }
-                this.f1268b = false;
+                this.isConnected = false;
                 m490M();
                 if (!this.f1267R) {
-                    m586w();
+                    requestRoom();
                     return;
                 }
                 return;
@@ -1605,7 +1598,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     /* synthetic */ void m604a(Gift gift) {
         m539e(gift.getDelayeds());
-        this.f1281p.addLast(gift);
+        this.gifts.addLast(gift);
         m543e(false);
     }
 
@@ -1630,7 +1623,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public void onReport() {
-        this.mRemoteRender.getRender().capture(CallActivity$$Lambda$52.lambdaFactory$(this, this.f1273h.getMatchUser()));
+        this.mRemoteRender.getRender().capture(CallActivity$$Lambda$52.lambdaFactory$(this, this.matchMessage.getMatchUser()));
     }
 
     /* synthetic */ void m607a(User user, Bitmap bmp) {
@@ -1669,11 +1662,11 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m521b(@NonNull Gift gift) {
-        if (this.f1273h == null || this.f1273h.getMatchUser() == null || !this.f1268b) {
+        if (this.matchMessage == null || this.matchMessage.getMatchUser() == null || !this.isConnected) {
             new Builder(this).setTitle((int) C0376R.string.send_gift_fail_title).setMessage((int) C0376R.string.send_gift_fail_message).setPositiveButton((int) C0376R.string.I_know, CallActivity$$Lambda$55.lambdaFactory$()).show(getSupportFragmentManager(), "GiftFailDialog");
             return;
         }
-        getDataLayer().getFollowManager().sendGiftActionV2(this.f1273h.getMatchUser().getUid(), gift.getId()).compose(bindUntilEvent(ActivityEvent.DESTROY)).compose(SchedulersCompat.applyIoSchedulers()).filter(CallActivity$$Lambda$56.lambdaFactory$()).subscribe(CallActivity$$Lambda$57.lambdaFactory$(this, gift), CallActivity$$Lambda$58.lambdaFactory$());
+        getDataLayer().getFollowManager().sendGiftActionV2(this.matchMessage.getMatchUser().getUid(), gift.getId()).compose(bindUntilEvent(ActivityEvent.DESTROY)).compose(SchedulersCompat.applyIoSchedulers()).filter(CallActivity$$Lambda$56.lambdaFactory$()).subscribe(CallActivity$$Lambda$57.lambdaFactory$(this, gift), CallActivity$$Lambda$58.lambdaFactory$());
     }
 
     static /* synthetic */ void m509a(DialogInterface dialog, int which) {
@@ -1685,11 +1678,11 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     /* synthetic */ void m605a(@NonNull Gift gift, SendGiftResult giftResult) throws Exception {
         if (giftResult.isResult()) {
-            if (this.f1277l != null && this.f1277l.isAdded()) {
-                this.f1277l.haveSendGift();
+            if (this.callMainFragment != null && this.callMainFragment.isAdded()) {
+                this.callMainFragment.haveSendGift();
             }
             m539e(gift.getDelayeds());
-            this.f1281p.addLast(gift);
+            this.gifts.addLast(gift);
             m543e(false);
         } else if (!TextUtils.isEmpty(giftResult.getTitle()) && !TextUtils.isEmpty(giftResult.getMsg())) {
             DialogHelper.INSTANCE.showFreeTimeOutDialog(this, giftResult.getTitle(), giftResult.getMsg());
@@ -1700,10 +1693,10 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     private void m543e(boolean immediately) {
-        if (this.f1268b && this.f1273h != null) {
+        if (this.isConnected && this.matchMessage != null) {
             this.mGiftShow.setVisibility(0);
-            if (this.f1281p.size() == 1 || immediately) {
-                Gift gift = (Gift) this.f1281p.getFirst();
+            if (this.gifts.size() == 1 || immediately) {
+                Gift gift = (Gift) this.gifts.getFirst();
                 if (!TextUtils.isEmpty(gift.getMusic())) {
                     String path = ACache.get((Context) this).getAsString(gift.getId());
                     if (path != null) {
@@ -1763,9 +1756,9 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void stopCoundDownEvent(StopCountDownEvent event) {
-        if (event != null && event.getUids() != null && this.f1273h != null && this.f1273h.getMatchUser() != null) {
+        if (event != null && event.getUids() != null && this.matchMessage != null && this.matchMessage.getMatchUser() != null) {
             for (String user : event.getUids()) {
-                if (!TextUtils.isEmpty(user) && user.equals(this.f1273h.getMatchUser().getUid())) {
+                if (!TextUtils.isEmpty(user) && user.equals(this.matchMessage.getMatchUser().getUid())) {
                     m483F();
                     m481D();
                 }
@@ -1829,8 +1822,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             this.mRemoteRender.getRender().release();
             this.mRemoteRender = null;
         }
-        if (this.f1282q != null) {
-            this.f1282q.destroy();
+        if (this.versionHelper != null) {
+            this.versionHelper.destroy();
         }
         MediaHelper.INSTANCE.release();
         super.onDestroy();
@@ -1868,8 +1861,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     private void m498U() {
         f1249a.m261d("showProfile");
-        if (this.f1279n == null) {
-            m585v();
+        if (this.youFragment == null) {
+            addYouFragment();
         }
         this.mMatchLayout.showRightPanel();
     }
@@ -1877,7 +1870,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     private void m499V() {
         f1249a.m261d("showFriend");
         if (this.f1278m == null) {
-            m584u();
+            addFriendFragment();
         } else {
             this.f1278m.onRestartPage();
         }
@@ -1886,10 +1879,10 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
 
     private void m549f(boolean smoothScroll) {
         if (this.f1278m == null) {
-            m584u();
+            addFriendFragment();
         }
-        if (this.f1279n == null) {
-            m585v();
+        if (this.youFragment == null) {
+            addYouFragment();
         }
         if (smoothScroll) {
             this.mMatchLayout.hidePanelWithSmoothSlide();
@@ -1903,14 +1896,14 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
         this.mMatchLayout.hidePanelWithSmoothSlide();
     }
 
-    private void m554g(boolean visible) {
+    private void changeMaskVisibility(boolean visible) {
         if (visible) {
-            this.mUpGradientMask.setVisibility(0);
-            this.mDownGradientmask.setVisibility(0);
+            this.mUpGradientMask.setVisibility(View.VISIBLE);
+            this.mDownGradientmask.setVisibility(View.VISIBLE);
             return;
         }
-        this.mUpGradientMask.setVisibility(8);
-        this.mDownGradientmask.setVisibility(8);
+        this.mUpGradientMask.setVisibility(View.GONE);
+        this.mDownGradientmask.setVisibility(View.GONE);
     }
 
     private void m501X() {
@@ -1969,8 +1962,8 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             f1249a.m261d("onBecameForeground: " + this.f1283r);
             if (this.f1283r) {
                 this.f1283r = false;
-                if (!this.f1268b && !this.f1269d && this.f1280o.get()) {
-                    m586w();
+                if (!this.isConnected && !this.f1269d && this.isMatchStarted.get()) {
+                    requestRoom();
                 }
             }
         }
@@ -1981,7 +1974,7 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
             f1249a.m261d("onBecameBackground: " + this.f1283r);
             if (!this.f1283r) {
                 this.f1283r = true;
-                if (this.f1280o.get()) {
+                if (this.isMatchStarted.get()) {
                     getDataLayer().getChatManager().unMatchAction().subscribeOn(Schedulers.io()).subscribe(CallActivity$$Lambda$62.lambdaFactory$(), CallActivity$$Lambda$63.lambdaFactory$());
                 }
                 if (this.f1274i != null && !this.f1274i.isDisposed()) {
@@ -1995,6 +1988,6 @@ public class CallActivity extends BaseActivity implements FacechatIMEvents, List
     }
 
     public boolean isVipUser() {
-        return this.f1273h != null && this.f1273h.isClockMode();
+        return this.matchMessage != null && this.matchMessage.isClockMode();
     }
 }

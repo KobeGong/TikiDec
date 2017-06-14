@@ -36,7 +36,7 @@ public class ChatMessageActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         this.f1400b = new ChatMessageFragment();
         this.f1400b.setArguments(getArguments());
         addFragment(this.f1400b);

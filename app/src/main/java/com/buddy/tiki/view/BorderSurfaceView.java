@@ -13,8 +13,8 @@ import com.facebook.drawee.view.SimpleDraweeView;
 import im.facechat.view.FCSurfaceView;
 
 public class BorderSurfaceView extends FrameLayout {
-    private SimpleDraweeView f2510a;
-    private FCSurfaceView f2511b;
+    private SimpleDraweeView borderView;
+    private FCSurfaceView surfaceView;
     private Border f2512c;
 
     public BorderSurfaceView(Context context) {
@@ -28,35 +28,35 @@ public class BorderSurfaceView extends FrameLayout {
     public BorderSurfaceView(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         this.f2512c = null;
-        m1637a(context);
+        init(context);
     }
 
-    private void m1637a(Context context) {
+    private void init(Context context) {
         inflate(context, C0376R.layout.widget_border_surface, this);
-        this.f2510a = (SimpleDraweeView) findViewById(C0376R.id.border);
-        this.f2511b = (FCSurfaceView) findViewById(C0376R.id.render);
+        this.borderView = (SimpleDraweeView) findViewById(C0376R.id.border);
+        this.surfaceView = (FCSurfaceView) findViewById(C0376R.id.render);
     }
 
     public SimpleDraweeView getBorder() {
-        return this.f2510a;
+        return this.borderView;
     }
 
     public FCSurfaceView getRender() {
-        return this.f2511b;
+        return this.surfaceView;
     }
 
     public void showBorder(@Nullable Border border) {
         this.f2512c = border;
         if (border == null || TextUtils.isEmpty(border.getSource())) {
-            this.f2510a.setVisibility(4);
+            this.borderView.setVisibility(4);
             return;
         }
-        this.f2510a.setVisibility(0);
-        this.f2510a.setController(((PipelineDraweeControllerBuilder) Fresco.newDraweeControllerBuilder().setUri(border.getSource()).setAutoPlayAnimations(true)).build());
+        this.borderView.setVisibility(0);
+        this.borderView.setController(((PipelineDraweeControllerBuilder) Fresco.newDraweeControllerBuilder().setUri(border.getSource()).setAutoPlayAnimations(true)).build());
     }
 
     public void hideBorder() {
-        this.f2510a.setVisibility(4);
+        this.borderView.setVisibility(4);
     }
 
     public Border getUsedBorder() {

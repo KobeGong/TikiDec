@@ -10,7 +10,7 @@ public class ProfileActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         ProfileFragment fragment = new ProfileFragment();
         fragment.setArguments(getArguments());
         addFragment(fragment);

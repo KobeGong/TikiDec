@@ -86,7 +86,7 @@ public class PhoneLoginActivity extends BaseActivity {
         return C0376R.layout.activity_phone_login;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m770d();
         m771e();
         getDataLayer().getAppManager().getConfigCache().compose(SchedulersCompat.applyIoSchedulers()).compose(bindToLifecycle()).subscribe(PhoneLoginActivity$$Lambda$1.lambdaFactory$(this), PhoneLoginActivity$$Lambda$2.lambdaFactory$());

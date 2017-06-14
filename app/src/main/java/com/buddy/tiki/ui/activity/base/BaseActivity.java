@@ -16,16 +16,20 @@ import android.view.ViewGroup;
 import android.view.ViewGroup.MarginLayoutParams;
 import android.view.WindowManager.LayoutParams;
 import android.view.inputmethod.InputMethodManager;
-import butterknife.ButterKnife;
+
 import com.buddy.tiki.C0376R;
 import com.buddy.tiki.service.base.DataLayer;
 import com.buddy.tiki.util.DisplayUtil;
 import com.buddy.tiki.util.phonetype.MeizuUtils;
 import com.trello.rxlifecycle2.components.support.RxAppCompatActivity;
 import com.umeng.analytics.MobclickAgent;
-import io.realm.Realm;
-import java.lang.reflect.Field;
+
 import org.bytedeco.javacpp.swscale;
+
+import java.lang.reflect.Field;
+
+import butterknife.ButterKnife;
+import io.realm.Realm;
 
 public abstract class BaseActivity extends RxAppCompatActivity {
     private DataLayer f1112a = DataLayer.getInstance();
@@ -34,7 +38,7 @@ public abstract class BaseActivity extends RxAppCompatActivity {
     @LayoutRes
     protected abstract int mo2115a();
 
-    protected abstract void mo2116a(Bundle bundle);
+    protected abstract void onActivityCreate(Bundle bundle);
 
     @IdRes
     protected abstract int mo2117b();
@@ -76,7 +80,7 @@ public abstract class BaseActivity extends RxAppCompatActivity {
         this.f1113c = Realm.getDefaultInstance();
         setContentView(mo2115a());
         ButterKnife.bind((Activity) this);
-        mo2116a(savedInstanceState);
+        onActivityCreate(savedInstanceState);
         ActivityManager.getInstance().onActivityCreate(this);
     }
 
@@ -252,7 +256,7 @@ public abstract class BaseActivity extends RxAppCompatActivity {
         return null;
     }
 
-    protected void m431d(View view) {
+    protected void initBottomView(View view) {
         if (view != null && DisplayUtil.hasNaviBar(this) && !MeizuUtils.isMeizu()) {
             ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
             if (layoutParams instanceof MarginLayoutParams) {

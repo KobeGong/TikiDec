@@ -25,7 +25,7 @@ public class AboutActivity extends BaseActivity {
         return 0;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m433c();
         m434d();
     }

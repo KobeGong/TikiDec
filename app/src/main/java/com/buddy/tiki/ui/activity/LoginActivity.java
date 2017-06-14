@@ -121,7 +121,7 @@ public class LoginActivity extends BaseActivity {
         return C0376R.layout.activity_login;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m741e();
         m742f();
         m743g();

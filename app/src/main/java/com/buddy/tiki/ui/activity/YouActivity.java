@@ -15,7 +15,7 @@ public class YouActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         getDataLayer().getFollowManager().syncFriendsQuery(PreferenceUtil.getSyncTimepoint()).subscribe(YouActivity$$Lambda$1.lambdaFactory$(), YouActivity$$Lambda$2.lambdaFactory$());
         addFragment(new YouFragment());
     }

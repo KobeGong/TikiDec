@@ -43,7 +43,7 @@ public class SearchActivity extends BaseActivity {
         return C0376R.layout.activity_search;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m1164d();
         m1165e();
     }

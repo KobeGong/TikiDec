@@ -324,7 +324,7 @@ public class CallFriendActivity extends BaseActivity implements FacechatIMEvents
         return C0376R.id.controller_fragment_container;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         if (savedInstanceState == null) {
             m674j();
             m671h();

@@ -71,7 +71,7 @@ public class SplashActivity extends BaseActivity {
         return C0376R.layout.activity_splash;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         this.f1471d = new RxPermissions(this);
         m798d();
         m800e();

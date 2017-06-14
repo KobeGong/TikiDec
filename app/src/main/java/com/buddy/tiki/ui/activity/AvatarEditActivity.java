@@ -127,7 +127,7 @@ public class AvatarEditActivity extends BaseActivity {
         return C0376R.layout.activity_avatar_edit;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m454c();
         m456d();
         m459f();

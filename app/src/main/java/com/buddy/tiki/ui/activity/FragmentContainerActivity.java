@@ -21,7 +21,7 @@ public class FragmentContainerActivity extends BaseActivity {
         return C0376R.layout.activity_blank;
     }
 
-    protected void mo2116a(Bundle savedInstanceState) {
+    protected void onActivityCreate(Bundle savedInstanceState) {
         m714c();
         addFragment((BaseFragment) Fragment.instantiate(this, this.f1403a, this.f1404b));
     }
